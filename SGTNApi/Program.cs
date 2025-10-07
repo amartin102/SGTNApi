@@ -1,7 +1,11 @@
+using Application.Interface;
+using Application.Service;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Repository.Context;
+using Repository.Interface;
+using Repository.Repositories;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +24,9 @@ builder.Services.AddDbContext<SqlDbContext>(options =>
     options.UseSqlServer(configuration.GetConnectionString("SqlServerConnectionString"));
 });
 
+
+builder.Services.AddTransient<IParameterMasterRepository, ParameterMasterRepository>();
+builder.Services.AddTransient<IParameterMasterRepository, ParameterMasterRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

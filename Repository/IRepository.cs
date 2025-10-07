@@ -9,7 +9,7 @@ namespace Repository
 {
     public interface IRepository<T> where T: class
     {
-        Task<T> GetByIdAsync(int id, Func<IQueryable<T>, IQueryable<T>> includeFunc = null);
+        Task<T> GetByIdAsync(Guid id, Func<IQueryable<T>, IQueryable<T>> includeFunc = null);
         Task<List<T>> GetAllAsync();
         Task<T> AddAsync(T entity);
         Task<bool> UpdateAsync(T entity);

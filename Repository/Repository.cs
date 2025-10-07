@@ -119,7 +119,7 @@ namespace Repository
             return await _context.Set<TEntity>().ToListAsync();
         }
 
-        public async Task<TEntity> GetByIdAsync(int id, Func<IQueryable<TEntity>, IQueryable<TEntity>> includeFunc = null)
+        public async Task<TEntity> GetByIdAsync(Guid id, Func<IQueryable<TEntity>, IQueryable<TEntity>> includeFunc = null)
         {
             try
             {
@@ -130,7 +130,7 @@ namespace Repository
                     query = includeFunc(query);
                 }
 
-                return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);// Carga los detalles relacionados
+                return await query.FirstOrDefaultAsync(e => EF.Property<Guid>(e, "strIdParametro") == id);// Carga los detalles relacionados
 
             }
             catch (Exception ex)
@@ -145,7 +145,7 @@ namespace Repository
             {
                 if (entity != null)
                 {
-                    var id = entity.GetType().GetProperty("Id").GetValue(entity);
+                    var id = entity.GetType().GetProperty("strIdParametro").GetValue(entity);
                     var _entity = await _context.Set<TEntity>().FindAsync(id);
 
                     if (_entity != null)
