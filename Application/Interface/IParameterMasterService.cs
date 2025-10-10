@@ -10,11 +10,11 @@ namespace Application.Interface
 {
     public  interface IParameterMasterService
     {
-            Task<ParameterMasterEntity> CreateParameter(ParameterMasterDto dto);
+            Task<bool> CreateParameter(ParameterMasterDto dto);
 
             Task<bool> UpdateParameter(ParameterMasterDto dto);
 
-            Task<ParameterMasterEntity> GetParameterById(Guid id);        
+            Task<ParameterMasterDto> GetParameterById(Guid id);        
     }
 
 }

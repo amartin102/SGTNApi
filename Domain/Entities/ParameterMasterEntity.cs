@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Security.Principal;
@@ -11,6 +12,7 @@ namespace Domain.Entities
     [Table("tblMaestroParametro", Schema = "param")]
     public class ParameterMasterEntity
     {
+        [Key]
         public Guid strIdParametro { get; set; }
 
         public string strCodParametro { get; set; }

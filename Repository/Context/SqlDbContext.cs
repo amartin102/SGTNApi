@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace Repository.Context
@@ -35,5 +36,8 @@ namespace Repository.Context
         {
             base.OnModelCreating(modelBuilder);
         }
+
+
+        public DbSet<ParameterMasterEntity> ParameterMaster { get; set; }
     }
 }

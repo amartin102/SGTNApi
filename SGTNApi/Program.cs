@@ -25,7 +25,7 @@ builder.Services.AddDbContext<SqlDbContext>(options =>
 });
 
 
-builder.Services.AddTransient<IParameterMasterRepository, ParameterMasterRepository>();
+builder.Services.AddTransient<IParameterMasterService, ParameterMasterService>();
 builder.Services.AddTransient<IParameterMasterRepository, ParameterMasterRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
