@@ -36,6 +36,6 @@ namespace Domain.Entities
         // Navigation properties
         public virtual ParameterType DataType { get; set; }
         public virtual InconsistencyLevel InconsistencyLevel { get; set; }
-        //public virtual ICollection<ParameterValue> ParameterValues { get; set; }
+        public virtual ICollection<ParameterValue> ParameterValues { get; set; }
     }
 }

@@ -30,13 +30,15 @@ builder.Services.AddDbContext<SqlDbContext>(options =>
 // Dependency Injection
 builder.Services.AddScoped<IMasterParameterRepository, MasterParameterRepository>();
 builder.Services.AddScoped<IMasterParameterService, MasterParameterService>();
+builder.Services.AddScoped<IParameterValueRepository, ParameterValueRepository>();
+builder.Services.AddScoped<IParameterValueService, ParameterValueService>();
 
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
 {
     cfg.ConstructServicesUsing(serviceProvider.GetService);
     cfg.AddProfile<MasterParameterProfile>();
-    //cfg.AddProfile<ParameterValueProfile>();
+    cfg.AddProfile<ParameterValueProfile>();
 }, typeof(Program).Assembly);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
