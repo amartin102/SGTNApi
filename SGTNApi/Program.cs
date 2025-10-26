@@ -1,8 +1,10 @@
 using Application.Interface;
+using Application.Mappings;
 using Application.Service;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Repository.Context;
 using Repository.Interface;
 using Repository.Repositories;
@@ -25,8 +27,17 @@ builder.Services.AddDbContext<SqlDbContext>(options =>
 });
 
 
-builder.Services.AddTransient<IParameterMasterService, ParameterMasterService>();
-builder.Services.AddTransient<IParameterMasterRepository, ParameterMasterRepository>();
+// Dependency Injection
+builder.Services.AddScoped<IMasterParameterRepository, MasterParameterRepository>();
+builder.Services.AddScoped<IMasterParameterService, MasterParameterService>();
+
+// AutoMapper con configuración explícita
+builder.Services.AddAutoMapper((serviceProvider, cfg) =>
+{
+    cfg.ConstructServicesUsing(serviceProvider.GetService);
+    cfg.AddProfile<MasterParameterProfile>();
+    //cfg.AddProfile<ParameterValueProfile>();
+}, typeof(Program).Assembly);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
