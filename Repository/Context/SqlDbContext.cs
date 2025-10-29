@@ -233,6 +233,26 @@ namespace Repository.Context
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // Client-Employee mapping (tabla de relación)
+            modelBuilder.Entity<ClientEmployee>(entity =>
+            {
+                entity.ToTable("tblClienteEmpleado", "client");
+                entity.HasKey(e => new { e.ClientId, e.EmployeeId });
+
+                entity.Property(e => e.ClientId).HasColumnName("strIdCliente");
+                entity.Property(e => e.EmployeeId).HasColumnName("strIdEmpleado");
+
+                entity.HasOne(ce => ce.Client)
+                      .WithMany()
+                      .HasForeignKey(ce => ce.ClientId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(ce => ce.Employee)
+                      .WithMany()
+                      .HasForeignKey(ce => ce.EmployeeId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
             // IdentificationType configuration
             modelBuilder.Entity<IdentificationType>(entity =>
             {
@@ -325,6 +345,9 @@ namespace Repository.Context
         public DbSet<Client> Clients { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<IdentificationType> IdentificationTypes { get; set; }
+
+        // Mapping table
+        public DbSet<ClientEmployee> ClientEmployees { get; set; }
 
         // Ubicación
         public DbSet<Country> Countries { get; set; }

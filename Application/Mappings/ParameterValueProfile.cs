@@ -17,6 +17,9 @@ namespace Application.Mappings
             CreateMap<ParameterValue, ParameterValueDto>()
                 .ForMember(dest => dest.ParameterCode, opt => opt.MapFrom(src => src.MasterParameter.Code))
                 .ForMember(dest => dest.ParameterDescription, opt => opt.MapFrom(src => $"Parámetro: {src.MasterParameter.Code}"))
+                // Mapeos añadidos para el tipo de dato asociado al parámetro
+                .ForMember(dest => dest.DataTypeId, opt => opt.MapFrom(src => src.MasterParameter != null ? src.MasterParameter.DataTypeId : 0))
+                .ForMember(dest => dest.DataTypeDescription, opt => opt.MapFrom(src => src.MasterParameter != null && src.MasterParameter.DataType != null ? src.MasterParameter.DataType.Description : null))
                 .ForMember(dest => dest.ClientName, opt => opt.MapFrom(src => src.Client.Name))
                 .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src =>
                     src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : null));

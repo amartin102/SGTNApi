@@ -15,6 +15,19 @@ var builder = WebApplication.CreateBuilder(args);
 // Acceso a la configuración
 var configuration = builder.Configuration;
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularDev", p =>
+        p.WithOrigins("http://localhost:4200", "http://localhost:4301")
+         .AllowAnyHeader()
+         .AllowAnyMethod()
+    // .AllowCredentials() // sólo si usas cookies / credenciales; no combinar con AllowAnyOrigin
+
+    );
+
+    options.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -32,6 +45,9 @@ builder.Services.AddScoped<IMasterParameterRepository, MasterParameterRepository
 builder.Services.AddScoped<IMasterParameterService, MasterParameterService>();
 builder.Services.AddScoped<IParameterValueRepository, ParameterValueRepository>();
 builder.Services.AddScoped<IParameterValueService, ParameterValueService>();
+builder.Services.AddScoped<IClientRepository, ClientsRepository>();
+builder.Services.AddScoped<IClientService, ClientService>();
+
 
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
@@ -46,13 +62,20 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.UseCors("AllowAngularDev");
+
 var cs = configuration.GetConnectionString("SqlServerConnectionString");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     //app.MapOpenApi();
+    // temporal en dev: acepta todo
+    app.UseCors("AllowAll");
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else {
+    app.UseCors("AllowAngularDev");
 }
 
 app.UseHttpsRedirection();

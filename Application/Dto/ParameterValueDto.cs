@@ -10,8 +10,15 @@ namespace Application.Dto
     {
         public Guid Id { get; set; }
         public Guid ParameterId { get; set; }
+
+        // Información del parámetro maestro
         public string ParameterCode { get; set; }
         public string ParameterDescription { get; set; }
+
+        // Tipo de dato asociado al parámetro (nuevo)
+        public int DataTypeId { get; set; }
+        public string DataTypeDescription { get; set; }
+
         public Guid ClientId { get; set; }
         public string ClientName { get; set; }
         public Guid? EmployeeId { get; set; }

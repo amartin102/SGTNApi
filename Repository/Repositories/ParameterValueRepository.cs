@@ -28,6 +28,7 @@ namespace Repository.Repositories
         {
             return await _context.ParameterValues
                 .Include(pv => pv.MasterParameter)
+                    .ThenInclude(mp => mp.DataType)
                 .Include(pv => pv.Client)
                 .Include(pv => pv.Employee)
                 .FirstOrDefaultAsync(pv => pv.Id == id);
@@ -42,6 +43,7 @@ namespace Repository.Repositories
         {
                 return await _context.ParameterValues
                .Include(pv => pv.MasterParameter)
+                    .ThenInclude(mp => mp.DataType)
                .Include(pv => pv.Client)
                .Include(pv => pv.Employee)
                .ToListAsync();            
@@ -51,6 +53,7 @@ namespace Repository.Repositories
         {
             return await _context.ParameterValues
                 .Include(pv => pv.MasterParameter)
+                    .ThenInclude(mp => mp.DataType)
                 .Include(pv => pv.Client)
                 .Include(pv => pv.Employee)
                 .Where(pv => pv.ParameterId == parameterId)
@@ -61,6 +64,7 @@ namespace Repository.Repositories
         {
             return await _context.ParameterValues
                 .Include(pv => pv.MasterParameter)
+                    .ThenInclude(mp => mp.DataType)
                 .Include(pv => pv.Client)
                 .Include(pv => pv.Employee)
                 .Where(pv => pv.ClientId == clientId)
@@ -71,6 +75,7 @@ namespace Repository.Repositories
         {
             return await _context.ParameterValues
                 .Include(pv => pv.MasterParameter)
+                    .ThenInclude(mp => mp.DataType)
                 .Include(pv => pv.Client)
                 .Include(pv => pv.Employee)
                 .Where(pv => pv.EmployeeId == employeeId)
@@ -81,6 +86,7 @@ namespace Repository.Repositories
         {
             return await _context.ParameterValues
                 .Include(pv => pv.MasterParameter)
+                    .ThenInclude(mp => mp.DataType)
                 .Include(pv => pv.Client)
                 .Include(pv => pv.Employee)
                 .Where(pv => pv.ClientId == clientId && pv.ParameterId == parameterId)
