@@ -18,6 +18,8 @@ namespace Application.Dto
         // Tipo de dato asociado al parámetro (nuevo)
         public int DataTypeId { get; set; }
         public string DataTypeDescription { get; set; }
+        // Origen del dato según tblMaestroParametro.strOrigenDato
+        public string OriginValue { get; set; }
 
         public Guid ClientId { get; set; }
         public string ClientName { get; set; }
@@ -26,6 +28,7 @@ namespace Application.Dto
         public string TextValue { get; set; }
         public decimal? NumericValue { get; set; }
         public DateTime? DateValue { get; set; }
+        public TimeSpan? HourValue { get; set; }
         public string CreatedBy { get; set; }
         public DateTime CreationDate { get; set; }
         public string ModifiedBy { get; set; }

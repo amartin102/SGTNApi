@@ -20,6 +20,8 @@ namespace Application.Mappings
                 // Mapeos añadidos para el tipo de dato asociado al parámetro
                 .ForMember(dest => dest.DataTypeId, opt => opt.MapFrom(src => src.MasterParameter != null ? src.MasterParameter.DataTypeId : 0))
                 .ForMember(dest => dest.DataTypeDescription, opt => opt.MapFrom(src => src.MasterParameter != null && src.MasterParameter.DataType != null ? src.MasterParameter.DataType.Description : null))
+                .ForMember(dest => dest.OriginValue, opt => opt.MapFrom(src => src.MasterParameter != null ? src.MasterParameter.DataOrigin : null))
+                .ForMember(dest => dest.HourValue, opt => opt.MapFrom(src => src.HourValue))
                 .ForMember(dest => dest.ClientName, opt => opt.MapFrom(src => src.Client.Name))
                 .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src =>
                     src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : null));
@@ -31,6 +33,7 @@ namespace Application.Mappings
                 .ForMember(dest => dest.ModificationDate, opt => opt.Ignore())
                 .ForMember(dest => dest.ModifiedBy, opt => opt.Ignore())
                 .ForMember(dest => dest.MasterParameter, opt => opt.Ignore())
+                .ForMember(dest => dest.HourValue, opt => opt.MapFrom(src => src.HourValue))
                 .ForMember(dest => dest.Client, opt => opt.Ignore())
                 .ForMember(dest => dest.Employee, opt => opt.Ignore());
 

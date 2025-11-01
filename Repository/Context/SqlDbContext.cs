@@ -40,7 +40,9 @@ namespace Repository.Context
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("strIdParametro");
                 entity.Property(e => e.Code).HasColumnName("strCodParametro").HasMaxLength(50);
+                entity.Property(e => e.Description).HasColumnName("strDescParametro").HasMaxLength(255);
                 entity.Property(e => e.DataTypeId).HasColumnName("intIdTipoDato");
+                entity.Property(e => e.DataOrigin).HasColumnName("strOrigenDato").HasMaxLength(255);
                 entity.Property(e => e.InconsistencyLevelId).HasColumnName("intIdNivelInconsistencia");
                 entity.Property(e => e.ModifyPermission).HasColumnName("strPermisoModificar").HasMaxLength(50);
                 entity.Property(e => e.ConsultPermission).HasColumnName("strPermisoConsultar").HasMaxLength(50);
@@ -103,6 +105,10 @@ namespace Repository.Context
 
                 entity.Property(e => e.DateValue)
                     .HasColumnName("datValorFecha");
+
+                entity.Property(e => e.HourValue)
+                    .HasColumnName("datValorHora")
+                    .HasColumnType("time");
 
                 entity.Property(e => e.CreatedBy)
                     .HasColumnName("strUsuarioCreador")

@@ -16,7 +16,9 @@ namespace Application.Mappings
             // MasterParameter mappings
             CreateMap<MasterParameter, MasterParameterDto>()
                 .ForMember(dest => dest.DataTypeDescription, opt => opt.MapFrom(src => src.DataType.Description))
-                .ForMember(dest => dest.InconsistencyLevelDescription, opt => opt.MapFrom(src => src.InconsistencyLevel.Description));
+                .ForMember(dest => dest.InconsistencyLevelDescription, opt => opt.MapFrom(src => src.InconsistencyLevel.Description))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+                .ForMember(dest => dest.DataOrigin, opt => opt.MapFrom(src => src.DataOrigin));
 
             CreateMap<CreateMasterParameterDto, MasterParameter>();
 

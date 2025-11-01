@@ -16,8 +16,12 @@ namespace Domain.Entities
         public Guid Id { get; set; }
         [Column("strCodParametro")]
         public string Code { get; set; }
+        [Column("strDescParametro")]
+        public string Description { get; set; }
         [Column("intIdTipoDato")]
         public int DataTypeId { get; set; }
+        [Column("strOrigenDato")]
+        public string? DataOrigin { get; set; }
         [Column("intIdNivelInconsistencia")]
         public int InconsistencyLevelId { get; set; }
         [Column("strPermisoModificar")]
