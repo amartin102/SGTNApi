@@ -145,6 +145,30 @@ namespace SGTNApi.Controllers
             }
         }
 
+        [HttpPut]
+        public async Task<ActionResult<bool>> UpdateRange([FromBody] IEnumerable<UpdateParameterValueWithIdDto> updateDtos)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var result = await _parameterValueService.UpdateRangeAsync(updateDtos);
+                if (result)
+                    return Ok(true);
+                else
+                    return StatusCode(500, new { message = "No se pudo actualizar en lote" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {

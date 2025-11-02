@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Repository.Context;
 using Repository.Interface;
 using Repository.Repositories;
+using SGTNApi.Converters;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,7 +31,12 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+        opts.JsonSerializerOptions.Converters.Add(new NullableTimeSpanConverter());
+        opts.JsonSerializerOptions.Converters.Add(new NullableDateTimeConverter());
+    });
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -45,9 +51,10 @@ builder.Services.AddScoped<IMasterParameterRepository, MasterParameterRepository
 builder.Services.AddScoped<IMasterParameterService, MasterParameterService>();
 builder.Services.AddScoped<IParameterValueRepository, ParameterValueRepository>();
 builder.Services.AddScoped<IParameterValueService, ParameterValueService>();
+
+// Register clients repository and service
 builder.Services.AddScoped<IClientRepository, ClientsRepository>();
 builder.Services.AddScoped<IClientService, ClientService>();
-
 
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>

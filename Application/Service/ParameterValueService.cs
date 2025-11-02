@@ -42,6 +42,12 @@ namespace Application.Service
             return _mapper.Map<ParameterValueDto>(value);
         }
 
+        public async Task<IEnumerable<ParameterValueDto>> GetByIdsAsync(IEnumerable<Guid> ids)
+        {
+            var values = await _repository.GetByIdsAsync(ids);
+            return _mapper.Map<IEnumerable<ParameterValueDto>>(values);
+        }
+
         public async Task<IEnumerable<ParameterValueDto>> GetByParameterIdAsync(Guid parameterId)
         {
             var values = await _repository.GetByParameterIdAsync(parameterId);
@@ -97,6 +103,37 @@ namespace Application.Service
             parameterValue.ModificationDate = DateTime.UtcNow;
 
             await _repository.UpdateAsync(parameterValue);
+        }
+
+        public async Task<bool> UpdateRangeAsync(IEnumerable<UpdateParameterValueWithIdDto> updateDtos)
+        {
+            try
+            {
+                var ids = updateDtos.Select(u => u.Id).ToList();
+                var entities = (await _repository.GetByIdsAsync(ids)).ToList();
+
+                // Map updates into entities
+                foreach (var entity in entities)
+                {
+                    var update = updateDtos.FirstOrDefault(u => u.Id == entity.Id);
+                    if (update == null) continue;
+
+                    // Map fields
+                    entity.TextValue = update.TextValue ?? entity.TextValue;
+                    entity.NumericValue = update.NumericValue ?? entity.NumericValue;
+                    entity.DateValue = update.DateValue ?? entity.DateValue;
+                    entity.HourValue = update.HourValue ?? entity.HourValue;
+                    entity.ModifiedBy = update.ModifiedBy ?? entity.ModifiedBy;
+                    entity.ModificationDate = DateTime.UtcNow;
+                }
+
+                await _repository.UpdateRangeAsync(entities);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task DeleteAsync(Guid id)

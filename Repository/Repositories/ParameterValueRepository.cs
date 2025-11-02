@@ -93,6 +93,23 @@ namespace Repository.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<ParameterValue>> GetByIdsAsync(IEnumerable<Guid> ids)
+        {
+            return await _context.ParameterValues
+                .Include(pv => pv.MasterParameter)
+                    .ThenInclude(mp => mp.DataType)
+                .Include(pv => pv.Client)
+                .Include(pv => pv.Employee)
+                .Where(pv => ids.Contains(pv.Id))
+                .ToListAsync();
+        }
+
+        public async Task UpdateRangeAsync(IEnumerable<ParameterValue> entities)
+        {
+            _context.ParameterValues.UpdateRange(entities);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<ParameterValue> AddAsync(ParameterValue entity)
         {
             _context.ParameterValues.Add(entity);

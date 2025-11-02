@@ -11,12 +11,14 @@ namespace Application.Interface
     {
         Task<IEnumerable<ParameterValueDto>> GetAllAsync();
         Task<ParameterValueDto> GetByIdAsync(Guid id);
+        Task<IEnumerable<ParameterValueDto>> GetByIdsAsync(IEnumerable<Guid> ids);
         Task<IEnumerable<ParameterValueDto>> GetByParameterIdAsync(Guid parameterId);
         Task<IEnumerable<ParameterValueDto>> GetByClientIdAsync(Guid clientId);
         Task<IEnumerable<ParameterValueDto>> GetByEmployeeIdAsync(Guid employeeId);
         Task<IEnumerable<ParameterValueDto>> GetByClientAndParameterAsync(Guid clientId, Guid parameterId);
         Task<ParameterValueDto> CreateAsync(CreateParameterValueDto createDto);
         Task UpdateAsync(Guid id, UpdateParameterValueDto updateDto);
+        Task<bool> UpdateRangeAsync(IEnumerable<UpdateParameterValueWithIdDto> updateDtos);
         Task DeleteAsync(Guid id);
     }
 }
