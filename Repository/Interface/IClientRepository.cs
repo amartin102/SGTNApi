@@ -9,5 +9,6 @@ namespace Repository.Interface
     {
         Task<IEnumerable<Client>> GetActiveClientsAsync();
         Task<IEnumerable<(Employee Employee, Guid? ClientId)>> GetActiveEmployeesWithClientAsync();
+        Task<bool> EmployeeExistsAsync(Guid employeeId);
     }
 }

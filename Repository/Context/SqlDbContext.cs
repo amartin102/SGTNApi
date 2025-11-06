@@ -337,6 +337,31 @@ namespace Repository.Context
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // TurnoProgramado configuration
+            modelBuilder.Entity<TurnoProgramado>(entity =>
+            {
+                entity.ToTable("tblTurnoProgramado", "schedule");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnName("strIdTurnoProgramado");
+                entity.Property(e => e.EmployeeId).HasColumnName("strIdEmpleado");
+                entity.Property(e => e.FechaInicioProgramada).HasColumnName("datFechaInicioProgramada");
+                entity.Property(e => e.HoraInicioProgramada).HasColumnName("datHoraInicioProgramada").HasColumnType("time");
+                entity.Property(e => e.FechaFinProgramada).HasColumnName("datFechaFinProgramada");
+                entity.Property(e => e.HoraFinProgramada).HasColumnName("datHoraFinProgramada").HasColumnType("time");
+                entity.Property(e => e.Estado).HasColumnName("strEstado").HasMaxLength(20);
+                entity.Property(e => e.Observaciones).HasColumnName("strObservaciones").HasMaxLength(500);
+                entity.Property(e => e.CreatedBy).HasColumnName("strUsuarioCreador").HasMaxLength(50);
+                entity.Property(e => e.CreationDate).HasColumnName("datFechaCreacion");
+                entity.Property(e => e.ModifiedBy).HasColumnName("strModificadoPor").HasMaxLength(50);
+                entity.Property(e => e.ModificationDate).HasColumnName("datFechaModificacion");
+
+                entity.HasOne(t => t.Employee)
+                      .WithMany()
+                      .HasForeignKey(t => t.EmployeeId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
             base.OnModelCreating(modelBuilder);
         }
 
@@ -345,6 +370,7 @@ namespace Repository.Context
         public DbSet<ParameterType> ParameterTypes { get; set; }
         public DbSet<InconsistencyLevel> InconsistencyLevels { get; set; }
 
+        // ParameterValues
         public DbSet<ParameterValue> ParameterValues { get; set; }
 
         // Clientes y Empleados
@@ -359,5 +385,8 @@ namespace Repository.Context
         public DbSet<Country> Countries { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<City> Cities { get; set; }
+
+        // Turnos programados
+        public DbSet<TurnoProgramado> TurnoProgramados { get; set; }
     }
 }

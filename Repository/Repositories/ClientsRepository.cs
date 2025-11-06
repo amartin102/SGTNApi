@@ -40,5 +40,10 @@ namespace Repository.Repositories
 
             return result;
         }
+
+        public async Task<bool> EmployeeExistsAsync(Guid employeeId)
+        {
+            return await _context.Employees.AnyAsync(e => e.Id == employeeId && e.Status);
+        }
     }
 }

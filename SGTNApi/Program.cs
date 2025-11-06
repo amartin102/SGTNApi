@@ -56,12 +56,17 @@ builder.Services.AddScoped<IParameterValueService, ParameterValueService>();
 builder.Services.AddScoped<IClientRepository, ClientsRepository>();
 builder.Services.AddScoped<IClientService, ClientService>();
 
+// TurnoProgramado DI
+builder.Services.AddScoped<Repository.Interface.ITurnoProgramadoRepository, Repository.Repositories.TurnoProgramadoRepository>();
+builder.Services.AddScoped<Application.Interface.ITurnoProgramadoService, Application.Service.TurnoProgramadoService>();
+
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
 {
     cfg.ConstructServicesUsing(serviceProvider.GetService);
     cfg.AddProfile<MasterParameterProfile>();
     cfg.AddProfile<ParameterValueProfile>();
+    cfg.AddProfile<TurnoProgramadoProfile>();
 }, typeof(Program).Assembly);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
