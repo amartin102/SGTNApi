@@ -60,6 +60,10 @@ builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<Repository.Interface.ITurnoProgramadoRepository, Repository.Repositories.TurnoProgramadoRepository>();
 builder.Services.AddScoped<Application.Interface.ITurnoProgramadoService, Application.Service.TurnoProgramadoService>();
 
+// MaestroPeriodo DI - added to resolve DI error
+builder.Services.AddScoped<Repository.Interface.IMaestroPeriodoRepository, Repository.Repositories.MaestroPeriodoRepository>();
+builder.Services.AddScoped<Application.Interface.IMaestroPeriodoService, Application.Service.MaestroPeriodoService>();
+
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
 {
@@ -67,6 +71,7 @@ builder.Services.AddAutoMapper((serviceProvider, cfg) =>
     cfg.AddProfile<MasterParameterProfile>();
     cfg.AddProfile<ParameterValueProfile>();
     cfg.AddProfile<TurnoProgramadoProfile>();
+    cfg.AddProfile<MaestroPeriodoProfile>();
 }, typeof(Program).Assembly);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

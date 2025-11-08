@@ -34,6 +34,9 @@ namespace Repository.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Ensure MaestroPeriodo is part of the model (explicit include)
+            modelBuilder.Entity<MaestroPeriodo>();
+
             modelBuilder.Entity<MasterParameter>(entity =>
             {
                 entity.ToTable("tblMaestroParametro", "param");
@@ -362,6 +365,35 @@ namespace Repository.Context
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // MaestroPeriodo mapping (make sure mapping is present)
+            modelBuilder.Entity<MaestroPeriodo>(entity =>
+            {
+                entity.ToTable("tblMaestroPeriodo", "payroll");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnName("strIdPeriodo");
+                entity.Property(e => e.ValorParametroPeriodicidadId).HasColumnName("strIdValorParametroPeriodicidad");
+                entity.Property(e => e.IdentificadorPeriodo).HasColumnName("strIdentificadorPeriodo").HasMaxLength(50);
+                entity.Property(e => e.Descripcion).HasColumnName("strDescripcion").HasMaxLength(200);
+                entity.Property(e => e.NumeroPeriodo).HasColumnName("intNumeroPeriodo");
+                entity.Property(e => e.Mes).HasColumnName("intMes");
+                entity.Property(e => e.FechaInicio).HasColumnName("datFechaInicio");
+                entity.Property(e => e.FechaFin).HasColumnName("datFechaFin");
+                entity.Property(e => e.FechaPago).HasColumnName("datFechaPago");
+                entity.Property(e => e.FechaCorte).HasColumnName("datFechaCorte");
+                entity.Property(e => e.Estado).HasColumnName("strEstado").HasMaxLength(20);
+                entity.Property(e => e.Cerrado).HasColumnName("bitCerrado");
+                entity.Property(e => e.UsuarioCreador).HasColumnName("strUsuarioCreador").HasMaxLength(100);
+                entity.Property(e => e.FechaCreacion).HasColumnName("datFechaCreacion");
+                entity.Property(e => e.ModifiedBy).HasColumnName("strModificadoPor").HasMaxLength(100);
+                entity.Property(e => e.FechaModificacion).HasColumnName("datFechaModificacion");
+
+                entity.HasOne(p => p.ValorParametroPeriodicidad)
+                      .WithMany()
+                      .HasForeignKey(p => p.ValorParametroPeriodicidadId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
             base.OnModelCreating(modelBuilder);
         }
 
@@ -388,5 +420,8 @@ namespace Repository.Context
 
         // Turnos programados
         public DbSet<TurnoProgramado> TurnoProgramados { get; set; }
+
+        // Maestro de periodos
+        public DbSet<MaestroPeriodo> MaestroPeriodos { get; set; }
     }
 }
