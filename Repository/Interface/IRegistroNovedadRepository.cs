@@ -9,5 +9,9 @@ namespace Repository.Interface
     {
         Task<IEnumerable<RegistroNovedad>> GetByEmpleadoIdAsync(Guid empleadoId);
         Task<IEnumerable<RegistroNovedad>> GetByPeriodoIdentifierAsync(string identificadorPeriodo);
+        Task<RegistroNovedad> AddAsync(RegistroNovedad entity);
+        Task UpdateAsync(RegistroNovedad entity);
+        Task<RegistroNovedad> GetByIdAsync(Guid id);
+        Task DeleteAsync(RegistroNovedad entity);
     }
 }

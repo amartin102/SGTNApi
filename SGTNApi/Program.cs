@@ -68,6 +68,10 @@ builder.Services.AddScoped<Application.Interface.IMaestroPeriodoService, Applica
 builder.Services.AddScoped<Repository.Interface.IRegistroNovedadRepository, Repository.Repositories.RegistroNovedadRepository>();
 builder.Services.AddScoped<Application.Interface.IRegistroNovedadService, Application.Service.RegistroNovedadService>();
 
+// MaestroConcepto DI
+builder.Services.AddScoped<Repository.Interface.IMaestroConceptoRepository, Repository.Repositories.MaestroConceptoRepository>();
+builder.Services.AddScoped<Application.Interface.IMaestroConceptoService, Application.Service.MaestroConceptoService>();
+
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
 {

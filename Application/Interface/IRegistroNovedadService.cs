@@ -9,5 +9,8 @@ namespace Application.Interface
     {
         Task<IEnumerable<RegistroNovedadDto>> GetByEmpleadoIdAsync(Guid empleadoId);
         Task<IEnumerable<RegistroNovedadDto>> GetByPeriodoIdentifierAsync(string identificadorPeriodo);
+        Task<RegistroNovedadDto> CreateAsync(CreateRegistroNovedadDto createDto);
+        Task UpdateAsync(Guid id, UpdateRegistroNovedadDto updateDto);
+        Task DeleteAsync(Guid id);
     }
 }

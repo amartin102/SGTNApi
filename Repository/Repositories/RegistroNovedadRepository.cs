@@ -45,5 +45,33 @@ namespace Repository.Repositories
 
             return list;
         }
+
+        public async Task<RegistroNovedad> AddAsync(RegistroNovedad entity)
+        {
+            _context.RegistroNovedades.Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task UpdateAsync(RegistroNovedad entity)
+        {
+            _context.Entry(entity).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<RegistroNovedad> GetByIdAsync(Guid id)
+        {
+            return await _context.RegistroNovedades
+                .Include(r => r.Empleado)
+                .Include(r => r.Concepto).ThenInclude(c => c.TipoConcepto)
+                .Include(r => r.Periodo)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
+
+        public async Task DeleteAsync(RegistroNovedad entity)
+        {
+            _context.RegistroNovedades.Remove(entity);
+            await _context.SaveChangesAsync();
+        }
     }
 }
