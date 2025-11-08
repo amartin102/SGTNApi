@@ -394,6 +394,67 @@ namespace Repository.Context
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // MaestroConceptoNovedad mapping
+            modelBuilder.Entity<MaestroConceptoNovedad>(entity =>
+            {
+                entity.ToTable("tblMaestroConceptoNovedad", "payroll");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnName("strIdConceptoNovedad");
+                entity.Property(e => e.NombreConcepto).HasColumnName("strNombreConcepto").HasMaxLength(200);
+                entity.Property(e => e.TipoConceptoId).HasColumnName("strIdTipoConcepto");
+                entity.Property(e => e.UsuarioCreador).HasColumnName("strUsuarioCreador").HasMaxLength(100);
+                entity.Property(e => e.FechaCreacion).HasColumnName("datFechaCreacion");
+
+                entity.HasOne(c => c.TipoConcepto)
+                      .WithMany()
+                      .HasForeignKey(c => c.TipoConceptoId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // TipoConcepto mapping
+            modelBuilder.Entity<TipoConcepto>(entity =>
+            {
+                entity.ToTable("tblTipoConcepto", "payroll");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnName("strIdTipoConcepto");
+                entity.Property(e => e.NombreTipo).HasColumnName("strNombreTipo").HasMaxLength(100);
+            });
+
+            // RegistroNovedad mapping
+            modelBuilder.Entity<RegistroNovedad>(entity =>
+            {
+                entity.ToTable("tblRegistroNovedad", "payroll");
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Id).HasColumnName("strIdNovedad");
+                entity.Property(e => e.EmpleadoId).HasColumnName("strIdEmpleado");
+                entity.Property(e => e.ConceptoNovedadId).HasColumnName("strIdConceptoNovedad");
+                entity.Property(e => e.PeriodoNominaId).HasColumnName("strIdPeriodoNomina");
+                entity.Property(e => e.ValorNovedad).HasColumnName("decValorNovedad").HasColumnType("decimal(18,2)");
+                entity.Property(e => e.FechaNovedad).HasColumnName("datFechaNovedad");
+                entity.Property(e => e.UsuarioCreador).HasColumnName("strUsuarioCreador").HasMaxLength(100);
+                entity.Property(e => e.FechaCreacion).HasColumnName("datFechaCreacion");
+                entity.Property(e => e.ModifiedBy).HasColumnName("strModificadoPor").HasMaxLength(100);
+                entity.Property(e => e.FechaModificacion).HasColumnName("datFechaModificacion");
+
+                entity.HasOne(r => r.Empleado)
+                      .WithMany()
+                      .HasForeignKey(r => r.EmpleadoId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.Concepto)
+                      .WithMany()
+                      .HasForeignKey(r => r.ConceptoNovedadId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(r => r.Periodo)
+                      .WithMany()
+                      .HasForeignKey(r => r.PeriodoNominaId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
             base.OnModelCreating(modelBuilder);
         }
 
@@ -423,5 +484,10 @@ namespace Repository.Context
 
         // Maestro de periodos
         public DbSet<MaestroPeriodo> MaestroPeriodos { get; set; }
+
+        // Add new DbSets
+        public DbSet<MaestroConceptoNovedad> MaestroConceptosNovedad { get; set; }
+        public DbSet<TipoConcepto> TipoConceptos { get; set; }
+        public DbSet<RegistroNovedad> RegistroNovedades { get; set; }
     }
 }

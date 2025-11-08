@@ -64,6 +64,10 @@ builder.Services.AddScoped<Application.Interface.ITurnoProgramadoService, Applic
 builder.Services.AddScoped<Repository.Interface.IMaestroPeriodoRepository, Repository.Repositories.MaestroPeriodoRepository>();
 builder.Services.AddScoped<Application.Interface.IMaestroPeriodoService, Application.Service.MaestroPeriodoService>();
 
+// Novedades DI
+builder.Services.AddScoped<Repository.Interface.IRegistroNovedadRepository, Repository.Repositories.RegistroNovedadRepository>();
+builder.Services.AddScoped<Application.Interface.IRegistroNovedadService, Application.Service.RegistroNovedadService>();
+
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
 {
@@ -72,6 +76,7 @@ builder.Services.AddAutoMapper((serviceProvider, cfg) =>
     cfg.AddProfile<ParameterValueProfile>();
     cfg.AddProfile<TurnoProgramadoProfile>();
     cfg.AddProfile<MaestroPeriodoProfile>();
+    cfg.AddProfile<NovedadProfiles>();
 }, typeof(Program).Assembly);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
