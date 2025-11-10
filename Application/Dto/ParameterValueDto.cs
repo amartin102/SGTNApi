@@ -21,6 +21,10 @@ namespace Application.Dto
         // Origen del dato según tblMaestroParametro.strOrigenDato
         public string OriginValue { get; set; }
 
+        // Nivel de inconsistencia del parámetro
+        public int IntIdNivelInconsistencia { get; set; }
+        public string StrNivelInconsistencia { get; set; }
+
         public Guid ClientId { get; set; }
         public string ClientName { get; set; }
         public Guid? EmployeeId { get; set; }
