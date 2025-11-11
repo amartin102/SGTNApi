@@ -72,6 +72,10 @@ builder.Services.AddScoped<Application.Interface.IRegistroNovedadService, Applic
 builder.Services.AddScoped<Repository.Interface.IMaestroConceptoRepository, Repository.Repositories.MaestroConceptoRepository>();
 builder.Services.AddScoped<Application.Interface.IMaestroConceptoService, Application.Service.MaestroConceptoService>();
 
+// Nómina DI
+builder.Services.AddScoped<Repository.Interface.INominaRepository, Repository.Repositories.NominaRepository>();
+builder.Services.AddScoped<Application.Interface.INominaService, Application.Service.NominaService>();
+
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
 {
