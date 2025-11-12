@@ -1,4 +1,4 @@
-﻿name: Deploy SGTNApi to Azure (with ACR)
+﻿name: Deploy SGTNApi to Azure (ACR fixed Dockerfile path)
 
 on:
   push:
@@ -8,10 +8,10 @@ env:
   RESOURCE_GROUP: 'resourceGroupDemo'
   CONTAINER_APP_NAME: 'sgtnapi'
   CONTAINER_APP_ENVIRONMENT: 'sgtn-env'
-  ACR_NAME: 'sgtnacr'          # debe ser único en Azure, cámbialo si ya existe
+  ACR_NAME: 'sgtnacr'
   LOCATION: 'eastus'
-  DOCKERFILE_PATH: 'SGTNApi/Dockerfile'
-  CONTEXT_PATH: 'SGTNApi'
+  DOCKERFILE_PATH: 'SGTNApi/Dockerfile'   # <-- Ruta real al Dockerfile
+  CONTEXT_PATH: 'SGTNApi'                 # <-- Carpeta del proyecto
 
 jobs:
   build-and-deploy:
@@ -21,11 +21,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Sanity check repo paths
+        run: |
+          echo "Root contents:"
+          ls -la
+          echo "Project contents:"
+          ls -la "${{ env.CONTEXT_PATH }}" || true
+          test -f "${{ env.DOCKERFILE_PATH }}" || (echo "❌ No se encontró el Dockerfile en ${{ env.DOCKERFILE_PATH }}" && exit 1)
+
       - name: Setup Azure CLI
         run: |
           az extension add --name containerapp --upgrade --yes
 
-      # Login clásico con secreto (compatible con Azure for Students)
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -37,40 +44,30 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
-      - name: Select subscription and create ACR if needed
+      - name: Ensure ACR exists
         run: |
           az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-          # Crear ACR si no existe (idempotente)
           if ! az acr show -n "${{ env.ACR_NAME }}" -g "${{ env.RESOURCE_GROUP }}" &>/dev/null; then
-            echo "🧱 Creating ACR ${{ env.ACR_NAME }} in ${{ env.RESOURCE_GROUP }}..."
+            echo "🧱 Creating ACR ${{ env.ACR_NAME }}..."
             az acr create -n "${{ env.ACR_NAME }}" -g "${{ env.RESOURCE_GROUP }}" --sku Basic --location "${{ env.LOCATION }}"
-            # habilitar admin para obtener credenciales de pull (simple)
             az acr update -n "${{ env.ACR_NAME }}" --admin-enabled true
           else
             echo "✅ ACR ${{ env.ACR_NAME }} already exists."
           fi
-          LOGIN_SERVER=$(az acr show -n "${{ env.ACR_NAME }}" -g "${{ env.RESOURCE_GROUP }}" --query loginServer -o tsv)
-          echo "LOGIN_SERVER=$LOGIN_SERVER" >> $GITHUB_ENV
-          # Obtener credenciales de ACR (ADMIN) sin imprimirlas
-          ACR_USER=$(az acr credential show -n "${{ env.ACR_NAME }}" --query username -o tsv)
-          ACR_PASS=$(az acr credential show -n "${{ env.ACR_NAME }}" --query passwords[0].value -o tsv)
-          echo "ACR_USER=$ACR_USER" >> $GITHUB_ENV
-          echo "ACR_PASS=$ACR_PASS" >> $GITHUB_ENV
 
       - name: Build and push image to ACR
         run: |
-          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-          echo "🔐 Logging into ACR ${{ env.ACR_NAME }}"
           az acr login -n "${{ env.ACR_NAME }}"
           IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}"
-          docker build -t "$IMAGE" .
+          echo "🔧 Building with Dockerfile: ${{ env.DOCKERFILE_PATH }} (context: ${{ env.CONTEXT_PATH }})"
+          docker build -t "$IMAGE" -f "${{ env.DOCKERFILE_PATH }}" "${{ env.CONTEXT_PATH }}"
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      - name: Deploy to Azure Container Apps (using image from ACR)
+      - name: Deploy to Azure Container Apps
         run: |
           echo "🚀 Deploying to Azure Container Apps..."
-          az containerapp up             --name "${{ env.CONTAINER_APP_NAME }}"             --resource-group "${{ env.RESOURCE_GROUP }}"             --environment "${{ env.CONTAINER_APP_ENVIRONMENT }}"             --location "${{ env.LOCATION }}"             --image "${{ env.IMAGE }}"             --registry-server "${{ env.LOGIN_SERVER }}"             --registry-username "${{ env.ACR_USER }}"             --registry-password "${{ env.ACR_PASS }}"             --ingress external             --target-port 80
+          az containerapp up             --name "${{ env.CONTAINER_APP_NAME }}"             --resource-group "${{ env.RESOURCE_GROUP }}"             --environment "${{ env.CONTAINER_APP_ENVIRONMENT }}"             --location "${{ env.LOCATION }}"             --image "${{ env.IMAGE }}"             --registry-server "${{ env.ACR_NAME }}.azurecr.io"             --ingress external             --target-port 80
 
       - name: Get Application URL
         run: |
