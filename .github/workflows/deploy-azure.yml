@@ -11,7 +11,7 @@ env:
   ACR_NAME: 'sgtnacr'
   LOCATION: 'eastus'
   DOCKERFILE_PATH: 'SGTNApi/Dockerfile'   # <-- Ruta real al Dockerfile
-  CONTEXT_PATH: 'SGTNApi'                 # <-- Carpeta del proyecto
+  CONTEXT_PATH: '.'                 # <-- Carpeta del proyecto
 
 jobs:
   build-and-deploy:
