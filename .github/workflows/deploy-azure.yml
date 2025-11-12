@@ -1,0 +1,52 @@
+﻿name: Deploy SGTNApi to Azure
+
+on:
+  push:
+    branches: [ "master" ]
+
+env:
+  RESOURCE_GROUP: 'resourceGroupDemo'
+  CONTAINER_APP_NAME: 'sgtnapi'
+  CONTAINER_APP_ENVIRONMENT: 'sgtn-env'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Azure CLI
+      run: |
+        az extension add --name containerapp --upgrade --yes
+
+    - name: Login to Azure
+      run: |
+        az login --service-principal \
+          -u "${{ secrets.AZURE_CLIENT_ID }}" \
+          -p "${{ secrets.AZURE_CLIENT_SECRET }}" \
+          --tenant "${{ secrets.AZURE_TENANT_ID }}"
+        az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+    - name: Deploy to Azure Container Apps
+      run: |
+        az containerapp up \
+          --name "${{ env.CONTAINER_APP_NAME }}" \
+          --resource-group "${{ env.RESOURCE_GROUP }}" \
+          --environment "${{ env.CONTAINER_APP_ENVIRONMENT }}" \
+          --location eastus \
+          --source . \
+          --ingress external \
+          --target-port 80
+
+    - name: Get Application URL
+      run: |
+        APP_URL=$(az containerapp show \
+          --name "${{ env.CONTAINER_APP_NAME }}" \
+          --resource-group "${{ env.RESOURCE_GROUP }}" \
+          --query properties.configuration.ingress.fqdn \
+          -o tsv)
+        echo "🎉 Deployment Successful!"
+        echo "🌐 Your App URL: https://$APP_URL"
+        echo "💚 Health Check: https://$APP_URL/health"
