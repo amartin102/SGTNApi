@@ -23,14 +23,23 @@ jobs:
 
     - name: Login to Azure
       run: |
+        echo "🔐 Logging in to Azure..."
         az login --service-principal \
-          -u "${{ secrets.AZURE_CLIENT_ID }}" \
-          -p "${{ secrets.AZURE_CLIENT_SECRET }}" \
-          --tenant "${{ secrets.AZURE_TENANT_ID }}"
-        az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          -u "3d7f9bdc-861d-4ddb-8c7b-802305e6ab76" \
+          -p "LFY8Q~DZ.Rxn6E_2GMCqkt8hfPfgn5IceHiljbxh" \
+          --tenant "4a0d0c24-fde5-4251-9a91-4b8bcb6ec907"
+
+    - name: Set Specific Subscription
+      run: |
+        echo "🎯 Setting specific subscription..."
+        az account set --subscription "d295f3ef-64f0-4818-9310-8aca7a966f19"
+        
+        echo "✅ Current subscription:"
+        az account show --query "{Name:name, Id:id, Tenant:tenantId}" --output table
 
     - name: Deploy to Azure Container Apps
       run: |
+        echo "🚀 Deploying to Azure Container Apps..."
         az containerapp up \
           --name "${{ env.CONTAINER_APP_NAME }}" \
           --resource-group "${{ env.RESOURCE_GROUP }}" \
