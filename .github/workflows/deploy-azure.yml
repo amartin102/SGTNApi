@@ -73,16 +73,7 @@ jobs:
           docker build -t "$IMAGE" -f "${{ env.DOCKERFILE_PATH }}" "${{ env.CONTEXT_PATH }}"
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
-
-      - name: Ensure Log Analytics workspace
-        run: |
-          LAW_NAME="${{ env.CONTAINER_APP_ENVIRONMENT }}-law"
-          if ! az monitor log-analytics workspace show -g "${{ env.RESOURCE_GROUP }}" -n "$LAW_NAME" &>/dev/null; then
-            az monitor log-analytics workspace create -g "${{ env.RESOURCE_GROUP }}" -n "$LAW_NAME" -l "${{ env.LOCATION }}"
-          fi
-          echo "LAW_ID=$(az monitor log-analytics workspace show -g '${{ env.RESOURCE_GROUP }}' -n '$LAW_NAME' --query customerId -o tsv)" >> $GITHUB_ENV
-          echo "LAW_KEY=$(az monitor log-analytics workspace get-shared-keys -g '${{ env.RESOURCE_GROUP }}' -n '$LAW_NAME' --query primarySharedKey -o tsv)" >> $GITHUB_ENV
-
+          
       - name: Ensure Container Apps Environment
         run: |
           if ! az containerapp env show -g "${{ env.RESOURCE_GROUP }}" -n "${{ env.CONTAINER_APP_ENVIRONMENT }}" &>/dev/null; then
