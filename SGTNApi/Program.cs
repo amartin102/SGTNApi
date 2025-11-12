@@ -76,6 +76,14 @@ builder.Services.AddScoped<Application.Interface.IMaestroConceptoService, Applic
 builder.Services.AddScoped<Repository.Interface.INominaRepository, Repository.Repositories.NominaRepository>();
 builder.Services.AddScoped<Application.Interface.INominaService, Application.Service.NominaService>();
 
+// Seguridad DI
+builder.Services.AddScoped<Repository.Interface.IRolRepository, Repository.Repositories.RolRepository>();
+builder.Services.AddScoped<Application.Interface.IRolService, Application.Service.RolService>();
+builder.Services.AddScoped<Repository.Interface.IUsuarioRepository, Repository.Repositories.UsuarioRepository>();
+builder.Services.AddScoped<Application.Interface.IUsuarioService, Application.Service.UsuarioService>();
+builder.Services.AddScoped<Repository.Interface.IPermisoRepository, Repository.Repositories.PermisoRepository>();
+builder.Services.AddScoped<Application.Interface.IPermisoService, Application.Service.PermisoService>();
+
 // AutoMapper con configuración explícita
 builder.Services.AddAutoMapper((serviceProvider, cfg) =>
 {
@@ -85,6 +93,7 @@ builder.Services.AddAutoMapper((serviceProvider, cfg) =>
     cfg.AddProfile<TurnoProgramadoProfile>();
     cfg.AddProfile<MaestroPeriodoProfile>();
     cfg.AddProfile<NovedadProfiles>();
+    cfg.AddProfile<SeguridadProfile>();
 }, typeof(Program).Assembly);
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

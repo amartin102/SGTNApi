@@ -455,6 +455,77 @@ namespace Repository.Context
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
+            // Rol mapping
+            modelBuilder.Entity<Rol>(entity =>
+            {
+                entity.ToTable("tblRol", "security");
+                entity.HasKey(e => e.IdRol);
+
+                entity.Property(e => e.IdRol).HasColumnName("idRol");
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(255);
+                entity.Property(e => e.EstaActivo).HasColumnName("estaActivo");
+                entity.Property(e => e.UsuarioCreacion).HasColumnName("usuarioCreacion").HasMaxLength(100);
+                entity.Property(e => e.FechaCreacion).HasColumnName("fechaCreacion");
+                entity.Property(e => e.UsuarioModificacion).HasColumnName("usuarioModificacion").HasMaxLength(100);
+                entity.Property(e => e.FechaModificacion).HasColumnName("fechaModificacion");
+            });
+
+            // Usuario mapping
+            modelBuilder.Entity<Usuario>(entity =>
+            {
+                entity.ToTable("tblUsuario", "security");
+                entity.HasKey(e => e.IdUsuario);
+
+                entity.Property(e => e.IdUsuario).HasColumnName("idUsuario");
+                entity.Property(e => e.NombreUsuario).HasColumnName("nombreUsuario").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Contrasena).HasColumnName("contrasena").HasMaxLength(255).IsRequired();
+                entity.Property(e => e.IdRol).HasColumnName("idRol");
+                entity.Property(e => e.EstaActivo).HasColumnName("estaActivo");
+                entity.Property(e => e.UltimoIngreso).HasColumnName("ultimoIngreso");
+                entity.Property(e => e.UsuarioCreacion).HasColumnName("usuarioCreacion").HasMaxLength(100);
+                entity.Property(e => e.FechaCreacion).HasColumnName("fechaCreacion");
+                entity.Property(e => e.UsuarioModificacion).HasColumnName("usuarioModificacion").HasMaxLength(100);
+                entity.Property(e => e.FechaModificacion).HasColumnName("fechaModificacion");
+
+                entity.HasOne(u => u.Rol)
+                      .WithMany(r => r.Usuarios)
+                      .HasForeignKey(u => u.IdRol)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Permiso mapping
+            modelBuilder.Entity<Permiso>(entity =>
+            {
+                entity.ToTable("tblPermiso", "security");
+                entity.HasKey(e => e.IdPermiso);
+
+                entity.Property(e => e.IdPermiso).HasColumnName("idPermiso");
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(255);
+                entity.Property(e => e.Codigo).HasColumnName("codigo").HasMaxLength(50).IsRequired();
+            });
+
+            // RolPermiso mapping
+            modelBuilder.Entity<RolPermiso>(entity =>
+            {
+                entity.ToTable("tblRolPermiso", "security");
+                entity.HasKey(e => new { e.IdRol, e.IdPermiso });
+
+                entity.Property(e => e.IdRol).HasColumnName("idRol");
+                entity.Property(e => e.IdPermiso).HasColumnName("idPermiso");
+
+                entity.HasOne(rp => rp.Rol)
+                      .WithMany(r => r.RolPermisos)
+                      .HasForeignKey(rp => rp.IdRol)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(rp => rp.Permiso)
+                      .WithMany(p => p.RolPermisos)
+                      .HasForeignKey(rp => rp.IdPermiso)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
             base.OnModelCreating(modelBuilder);
         }
 
@@ -489,5 +560,11 @@ namespace Repository.Context
         public DbSet<MaestroConceptoNovedad> MaestroConceptosNovedad { get; set; }
         public DbSet<TipoConcepto> TipoConceptos { get; set; }
         public DbSet<RegistroNovedad> RegistroNovedades { get; set; }
+
+        // Security DbSets
+        public DbSet<Rol> Roles { get; set; }
+        public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Permiso> Permisos { get; set; }
+        public DbSet<RolPermiso> RolPermisos { get; set; }
     }
 }
