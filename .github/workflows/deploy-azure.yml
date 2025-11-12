@@ -12,54 +12,43 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Azure CLI
-      run: |
-        az extension add --name containerapp --upgrade --yes
+      - name: Setup Azure CLI
+        run: |
+          az extension add --name containerapp --upgrade --yes
 
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-      creds: |      
-          {
-            "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-            "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-            "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-            "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-          }
-        
-    - name: Set Specific Subscription
-      run: |
-        echo "🎯 Setting specific subscription..."
-        az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-        
-        echo "✅ Current subscription:"
-        az account show --query "{Name:name, Id:id, Tenant:tenantId}" --output table
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
 
-    - name: Deploy to Azure Container Apps
-      run: |
-        echo "🚀 Deploying to Azure Container Apps..."
-        az containerapp up \
-          --name "${{ env.CONTAINER_APP_NAME }}" \
-          --resource-group "${{ env.RESOURCE_GROUP }}" \
-          --environment "${{ env.CONTAINER_APP_ENVIRONMENT }}" \
-          --location eastus \
-          --source . \
-          --ingress external \
-          --target-port 80
+      - name: Set Specific Subscription
+        run: |
+          echo "🎯 Setting specific subscription..."
+          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-    - name: Get Application URL
-      run: |
-        APP_URL=$(az containerapp show \
-          --name "${{ env.CONTAINER_APP_NAME }}" \
-          --resource-group "${{ env.RESOURCE_GROUP }}" \
-          --query properties.configuration.ingress.fqdn \
-          -o tsv)
-        echo "🎉 Deployment Successful!"
-        echo "🌐 Your App URL: https://$APP_URL"
-        echo "💚 Health Check: https://$APP_URL/health"
-        echo "🔗 API: https://$APP_URL/api/clients"
+          echo "✅ Current subscription:"
+          az account show --query "{Name:name, Id:id, Tenant:tenantId}" --output table
+
+      - name: Deploy to Azure Container Apps
+        run: |
+          echo "🚀 Deploying to Azure Container Apps..."
+          az containerapp up             --name "${{ env.CONTAINER_APP_NAME }}"             --resource-group "${{ env.RESOURCE_GROUP }}"             --environment "${{ env.CONTAINER_APP_ENVIRONMENT }}"             --location eastus             --source .             --ingress external             --target-port 80
+
+      - name: Get Application URL
+        run: |
+          APP_URL=$(az containerapp show             --name "${{ env.CONTAINER_APP_NAME }}"             --resource-group "${{ env.RESOURCE_GROUP }}"             --query properties.configuration.ingress.fqdn             -o tsv)
+          echo "🎉 Deployment Successful!"
+          echo "🌐 Your App URL: https://$APP_URL"
+          echo "💚 Health Check: https://$APP_URL/health"
+          echo "🔗 API: https://$APP_URL/api/clients"
