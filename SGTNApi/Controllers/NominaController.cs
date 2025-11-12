@@ -13,6 +13,7 @@ namespace SGTNApi.Controllers
         public NominaController(INominaService nominaService)
         {
             _nominaService = nominaService;
+
         }
 
         [HttpGet("CalcularNomina/{strIdPeriodo}/{strIdCliente}")]
