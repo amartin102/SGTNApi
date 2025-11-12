@@ -1,4 +1,4 @@
-﻿name: Deploy SGTNApi to Azure (ACR fixed Dockerfile path)
+﻿name: Deploy SGTNApi to Azure (ACR + ACA, no 'up' bug)
 
 on:
   push:
@@ -8,10 +8,10 @@ env:
   RESOURCE_GROUP: 'resourceGroupDemo'
   CONTAINER_APP_NAME: 'sgtnapi'
   CONTAINER_APP_ENVIRONMENT: 'sgtn-env'
-  ACR_NAME: 'sgtnacr'
+  ACR_NAME: 'sgtnacr'            # Cambia si ya existe; debe ser único
   LOCATION: 'eastus'
-  DOCKERFILE_PATH: 'SGTNApi/Dockerfile'   # <-- Ruta real al Dockerfile
-  CONTEXT_PATH: '.'                 # <-- Carpeta del proyecto
+  DOCKERFILE_PATH: 'SGTNApi/Dockerfile'  # Dockerfile real dentro del repo
+  CONTEXT_PATH: '.'                        # Contexto raíz para permitir COPY de proyectos hermanos
 
 jobs:
   build-and-deploy:
@@ -21,18 +21,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Sanity check repo paths
-        run: |
-          echo "Root contents:"
-          ls -la
-          echo "Project contents:"
-          ls -la "${{ env.CONTEXT_PATH }}" || true
-          test -f "${{ env.DOCKERFILE_PATH }}" || (echo "❌ No se encontró el Dockerfile en ${{ env.DOCKERFILE_PATH }}" && exit 1)
-
-      - name: Setup Azure CLI
+      - name: Setup Azure CLI (containerapp extension)
         run: |
           az extension add --name containerapp --upgrade --yes
 
+      # Login clásico con secreto (compatible con Azure for Students / tenant bloqueado)
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -44,30 +37,68 @@ jobs:
               "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
             }
 
-      - name: Ensure ACR exists
+      - name: Select subscription
         run: |
           az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          az account show --query "{Name:name, Id:id, Tenant:tenantId}" -o table
+
+      - name: Ensure resource group and providers
+        run: |
+          az group create -n "${{ env.RESOURCE_GROUP }}" -l "${{ env.LOCATION }}"
+          for NS in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry; do
+            az provider register --namespace $NS || true
+          done
+          echo "Providers registered (or already registered)."
+
+      - name: Ensure ACR exists and get credentials
+        run: |
           if ! az acr show -n "${{ env.ACR_NAME }}" -g "${{ env.RESOURCE_GROUP }}" &>/dev/null; then
-            echo "🧱 Creating ACR ${{ env.ACR_NAME }}..."
+            echo "🧱 Creating ACR ${{ env.ACR_NAME }} in ${{ env.RESOURCE_GROUP }}..."
             az acr create -n "${{ env.ACR_NAME }}" -g "${{ env.RESOURCE_GROUP }}" --sku Basic --location "${{ env.LOCATION }}"
             az acr update -n "${{ env.ACR_NAME }}" --admin-enabled true
           else
             echo "✅ ACR ${{ env.ACR_NAME }} already exists."
+            az acr update -n "${{ env.ACR_NAME }}" --admin-enabled true
           fi
+          echo "LOGIN_SERVER=$(az acr show -n '${{ env.ACR_NAME }}' -g '${{ env.RESOURCE_GROUP }}' --query loginServer -o tsv)" >> $GITHUB_ENV
+          echo "ACR_USER=$(az acr credential show -n '${{ env.ACR_NAME }}' --query username -o tsv)" >> $GITHUB_ENV
+          echo "ACR_PASS=$(az acr credential show -n '${{ env.ACR_NAME }}' --query passwords[0].value -o tsv)" >> $GITHUB_ENV
 
       - name: Build and push image to ACR
         run: |
           az acr login -n "${{ env.ACR_NAME }}"
           IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}"
           echo "🔧 Building with Dockerfile: ${{ env.DOCKERFILE_PATH }} (context: ${{ env.CONTEXT_PATH }})"
+          test -f "${{ env.DOCKERFILE_PATH }}" || (echo "❌ Dockerfile no encontrado en ${{ env.DOCKERFILE_PATH }}" && exit 1)
           docker build -t "$IMAGE" -f "${{ env.DOCKERFILE_PATH }}" "${{ env.CONTEXT_PATH }}"
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      - name: Deploy to Azure Container Apps
+      - name: Ensure Log Analytics workspace
         run: |
-          echo "🚀 Deploying to Azure Container Apps..."
-          az containerapp up             --name "${{ env.CONTAINER_APP_NAME }}"             --resource-group "${{ env.RESOURCE_GROUP }}"             --environment "${{ env.CONTAINER_APP_ENVIRONMENT }}"             --location "${{ env.LOCATION }}"             --image "${{ env.IMAGE }}"             --registry-server "${{ env.ACR_NAME }}.azurecr.io"             --ingress external             --target-port 80
+          LAW_NAME="${{ env.CONTAINER_APP_ENVIRONMENT }}-law"
+          if ! az monitor log-analytics workspace show -g "${{ env.RESOURCE_GROUP }}" -n "$LAW_NAME" &>/dev/null; then
+            az monitor log-analytics workspace create -g "${{ env.RESOURCE_GROUP }}" -n "$LAW_NAME" -l "${{ env.LOCATION }}"
+          fi
+          echo "LAW_ID=$(az monitor log-analytics workspace show -g '${{ env.RESOURCE_GROUP }}' -n '$LAW_NAME' --query customerId -o tsv)" >> $GITHUB_ENV
+          echo "LAW_KEY=$(az monitor log-analytics workspace get-shared-keys -g '${{ env.RESOURCE_GROUP }}' -n '$LAW_NAME' --query primarySharedKey -o tsv)" >> $GITHUB_ENV
+
+      - name: Ensure Container Apps Environment
+        run: |
+          if ! az containerapp env show -g "${{ env.RESOURCE_GROUP }}" -n "${{ env.CONTAINER_APP_ENVIRONMENT }}" &>/dev/null; then
+            az containerapp env create               -g "${{ env.RESOURCE_GROUP }}"               -n "${{ env.CONTAINER_APP_ENVIRONMENT }}"               -l "${{ env.LOCATION }}"               --logs-workspace-id "${{ env.LAW_ID }}"               --logs-workspace-key "${{ env.LAW_KEY }}"
+          else
+            echo "✅ Container Apps Environment already exists."
+          fi
+
+      - name: Create or update Container App
+        run: |
+          APP_EXISTS=$(az containerapp show -g "${{ env.RESOURCE_GROUP }}" -n "${{ env.CONTAINER_APP_NAME }}" --query name -o tsv || true)
+          if [ -z "$APP_EXISTS" ]; then
+            az containerapp create               -g "${{ env.RESOURCE_GROUP }}"               -n "${{ env.CONTAINER_APP_NAME }}"               --environment "${{ env.CONTAINER_APP_ENVIRONMENT }}"               --image "${{ env.IMAGE }}"               --ingress external --target-port 80               --registry-server "${{ env.LOGIN_SERVER }}"               --registry-username "${{ env.ACR_USER }}"               --registry-password "${{ env.ACR_PASS }}"
+          else
+            az containerapp update               -g "${{ env.RESOURCE_GROUP }}"               -n "${{ env.CONTAINER_APP_NAME }}"               --image "${{ env.IMAGE }}"
+          fi
 
       - name: Get Application URL
         run: |
