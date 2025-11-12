@@ -1,4 +1,4 @@
-﻿name: Deploy SGTNApi to Azure (no Log Analytics)
+﻿name: Deploy SGTNApi to Azure (stable + fixes for provider bug)
 
 on:
   push:
@@ -9,7 +9,7 @@ env:
   CONTAINER_APP_NAME: 'sgtnapi'
   CONTAINER_APP_ENVIRONMENT: 'sgtn-env'
   ACR_NAME: 'sgtnacr'
-  LOCATION: 'westus2'             # usa la región real del RG
+  LOCATION: 'westus2'
   DOCKERFILE_PATH: 'SGTNApi/Dockerfile'
   CONTEXT_PATH: '.'
 
@@ -21,9 +21,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Azure CLI (containerapp extension)
+      - name: Upgrade Azure CLI + reinstall containerapp extension
         run: |
-          az extension add --name containerapp --upgrade --yes
+          sudo az upgrade --yes
+          az extension remove -n containerapp || true
+          az extension add -n containerapp --yes
 
       - name: Login to Azure
         uses: azure/login@v1
@@ -41,21 +43,39 @@ jobs:
           az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           az account show --query "{Name:name, Id:id, Tenant:tenantId}" -o table
 
-      - name: Ensure resource group and providers (no OperationalInsights)
+      - name: Ensure resource group and providers
         run: |
+          set -e
           RG="${{ env.RESOURCE_GROUP }}"
           if az group exists -n "$RG" | grep -qi true; then
             RG_LOC=$(az group show -n "$RG" --query location -o tsv)
             echo "LOCATION=$RG_LOC" >> $GITHUB_ENV
-            echo "✅ RG '$RG' ya existe en '$RG_LOC'."
+            echo "✅ Resource group '$RG' exists in '$RG_LOC'."
           else
             az group create -n "$RG" -l "${{ env.LOCATION }}" 1>/dev/null
             echo "LOCATION=${{ env.LOCATION }}" >> $GITHUB_ENV
           fi
-          # Solo los providers requeridos; omitimos Microsoft.OperationalInsights
+
+          # Register providers manually (avoid containerapp auto registration bug)
           for NS in Microsoft.App Microsoft.ContainerRegistry; do
             az provider register --namespace $NS || true
           done
+
+          echo "⏳ Waiting for Microsoft.App registration..."
+          for i in {1..30}; do
+            STATE=$(az provider show --namespace Microsoft.App --query registrationState -o tsv || echo "Unknown")
+            echo "State: $STATE"
+            if [ "$STATE" = "Registered" ]; then
+              echo "✅ Microsoft.App Registered."
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$STATE" != "Registered" ]; then
+            echo "❌ Microsoft.App not registered in time."
+            exit 1
+          fi
 
       - name: Ensure ACR exists and get credentials
         run: |
@@ -73,18 +93,14 @@ jobs:
         run: |
           az acr login -n "${{ env.ACR_NAME }}"
           IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}"
-          test -f "${{ env.DOCKERFILE_PATH }}" || (echo "❌ Dockerfile no encontrado en ${{ env.DOCKERFILE_PATH }}" && exit 1)
+          test -f "${{ env.DOCKERFILE_PATH }}" || (echo "❌ Dockerfile not found at ${{ env.DOCKERFILE_PATH }}" && exit 1)
           docker build -t "$IMAGE" -f "${{ env.DOCKERFILE_PATH }}" "${{ env.CONTEXT_PATH }}"
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      - name: Ensure Container Apps Environment (logs disabled)
+      - name: Ensure Container Apps Environment (no Log Analytics)
         run: |
-          if ! az containerapp env show -g "${{ env.RESOURCE_GROUP }}" -n "${{ env.CONTAINER_APP_ENVIRONMENT }}" &>/dev/null; then
-            az containerapp env create               -g "${{ env.RESOURCE_GROUP }}"               -n "${{ env.CONTAINER_APP_ENVIRONMENT }}"               -l "${{ env.LOCATION }}"               --logs-destination none
-          else
-            echo "✅ Container Apps Environment ya existe."
-          fi
+          az containerapp env show             -g "${{ env.RESOURCE_GROUP }}"             -n "${{ env.CONTAINER_APP_ENVIRONMENT }}" >/dev/null 2>&1 ||           az containerapp env create             -g "${{ env.RESOURCE_GROUP }}"             -n "${{ env.CONTAINER_APP_ENVIRONMENT }}"             -l "${{ env.LOCATION }}"             --logs-destination none
 
       - name: Create or update Container App
         run: |
