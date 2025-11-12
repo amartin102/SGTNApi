@@ -1,4 +1,4 @@
-﻿name: Deploy SGTNApi to Azure (ACR + ACA, no 'up' bug)
+﻿name: Deploy SGTNApi to Azure (no Log Analytics)
 
 on:
   push:
@@ -8,10 +8,10 @@ env:
   RESOURCE_GROUP: 'resourceGroupDemo'
   CONTAINER_APP_NAME: 'sgtnapi'
   CONTAINER_APP_ENVIRONMENT: 'sgtn-env'
-  ACR_NAME: 'sgtnacr'            # Cambia si ya existe; debe ser único
-  LOCATION: 'westus2'
-  DOCKERFILE_PATH: 'SGTNApi/Dockerfile'  # Dockerfile real dentro del repo
-  CONTEXT_PATH: '.'                        # Contexto raíz para permitir COPY de proyectos hermanos
+  ACR_NAME: 'sgtnacr'
+  LOCATION: 'westus2'             # usa la región real del RG
+  DOCKERFILE_PATH: 'SGTNApi/Dockerfile'
+  CONTEXT_PATH: '.'
 
 jobs:
   build-and-deploy:
@@ -25,7 +25,6 @@ jobs:
         run: |
           az extension add --name containerapp --upgrade --yes
 
-      # Login clásico con secreto (compatible con Azure for Students / tenant bloqueado)
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -42,22 +41,28 @@ jobs:
           az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           az account show --query "{Name:name, Id:id, Tenant:tenantId}" -o table
 
-      - name: Ensure resource group and providers
+      - name: Ensure resource group and providers (no OperationalInsights)
         run: |
-          az group create -n "${{ env.RESOURCE_GROUP }}" -l "${{ env.LOCATION }}"
-          for NS in Microsoft.App Microsoft.OperationalInsights Microsoft.ContainerRegistry; do
+          RG="${{ env.RESOURCE_GROUP }}"
+          if az group exists -n "$RG" | grep -qi true; then
+            RG_LOC=$(az group show -n "$RG" --query location -o tsv)
+            echo "LOCATION=$RG_LOC" >> $GITHUB_ENV
+            echo "✅ RG '$RG' ya existe en '$RG_LOC'."
+          else
+            az group create -n "$RG" -l "${{ env.LOCATION }}" 1>/dev/null
+            echo "LOCATION=${{ env.LOCATION }}" >> $GITHUB_ENV
+          fi
+          # Solo los providers requeridos; omitimos Microsoft.OperationalInsights
+          for NS in Microsoft.App Microsoft.ContainerRegistry; do
             az provider register --namespace $NS || true
           done
-          echo "Providers registered (or already registered)."
 
       - name: Ensure ACR exists and get credentials
         run: |
           if ! az acr show -n "${{ env.ACR_NAME }}" -g "${{ env.RESOURCE_GROUP }}" &>/dev/null; then
-            echo "🧱 Creating ACR ${{ env.ACR_NAME }} in ${{ env.RESOURCE_GROUP }}..."
             az acr create -n "${{ env.ACR_NAME }}" -g "${{ env.RESOURCE_GROUP }}" --sku Basic --location "${{ env.LOCATION }}"
             az acr update -n "${{ env.ACR_NAME }}" --admin-enabled true
           else
-            echo "✅ ACR ${{ env.ACR_NAME }} already exists."
             az acr update -n "${{ env.ACR_NAME }}" --admin-enabled true
           fi
           echo "LOGIN_SERVER=$(az acr show -n '${{ env.ACR_NAME }}' -g '${{ env.RESOURCE_GROUP }}' --query loginServer -o tsv)" >> $GITHUB_ENV
@@ -68,18 +73,17 @@ jobs:
         run: |
           az acr login -n "${{ env.ACR_NAME }}"
           IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.CONTAINER_APP_NAME }}:${{ github.sha }}"
-          echo "🔧 Building with Dockerfile: ${{ env.DOCKERFILE_PATH }} (context: ${{ env.CONTEXT_PATH }})"
           test -f "${{ env.DOCKERFILE_PATH }}" || (echo "❌ Dockerfile no encontrado en ${{ env.DOCKERFILE_PATH }}" && exit 1)
           docker build -t "$IMAGE" -f "${{ env.DOCKERFILE_PATH }}" "${{ env.CONTEXT_PATH }}"
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
-          
-      - name: Ensure Container Apps Environment
+
+      - name: Ensure Container Apps Environment (logs disabled)
         run: |
           if ! az containerapp env show -g "${{ env.RESOURCE_GROUP }}" -n "${{ env.CONTAINER_APP_ENVIRONMENT }}" &>/dev/null; then
-            az containerapp env create               -g "${{ env.RESOURCE_GROUP }}"               -n "${{ env.CONTAINER_APP_ENVIRONMENT }}"               -l "${{ env.LOCATION }}"               --logs-workspace-id "${{ env.LAW_ID }}"               --logs-workspace-key "${{ env.LAW_KEY }}"
+            az containerapp env create               -g "${{ env.RESOURCE_GROUP }}"               -n "${{ env.CONTAINER_APP_ENVIRONMENT }}"               -l "${{ env.LOCATION }}"               --logs-destination none
           else
-            echo "✅ Container Apps Environment already exists."
+            echo "✅ Container Apps Environment ya existe."
           fi
 
       - name: Create or update Container App
