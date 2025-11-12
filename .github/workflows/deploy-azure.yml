@@ -50,3 +50,4 @@ jobs:
         echo "🎉 Deployment Successful!"
         echo "🌐 Your App URL: https://$APP_URL"
         echo "💚 Health Check: https://$APP_URL/health"
+        echo "🔗 API: https://$APP_URL/api/clients"
