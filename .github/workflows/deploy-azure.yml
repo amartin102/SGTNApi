@@ -9,7 +9,7 @@ env:
   CONTAINER_APP_NAME: 'sgtnapi'
   CONTAINER_APP_ENVIRONMENT: 'sgtn-env'
   ACR_NAME: 'sgtnacr'            # Cambia si ya existe; debe ser único
-  LOCATION: 'eastus'
+  LOCATION: 'westus2'
   DOCKERFILE_PATH: 'SGTNApi/Dockerfile'  # Dockerfile real dentro del repo
   CONTEXT_PATH: '.'                        # Contexto raíz para permitir COPY de proyectos hermanos
 
