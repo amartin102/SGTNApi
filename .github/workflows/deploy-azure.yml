@@ -10,6 +10,8 @@ env:
   CONTAINER_APP_ENVIRONMENT: 'sgtn-env'
   ACR_NAME: 'sgtnacr'          # debe ser único en Azure, cámbialo si ya existe
   LOCATION: 'eastus'
+  DOCKERFILE_PATH: 'Presentation/SGTNApi/Dockerfile'
+  CONTEXT_PATH: 'Presentation/SGTNApi'
 
 jobs:
   build-and-deploy:
